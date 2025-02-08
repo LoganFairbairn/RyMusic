@@ -1,12 +1,12 @@
 import sys
 import os
+import random
 import pygame
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QListWidget, QListWidgetItem, QSlider, QFileDialog, QMenu, QAction
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QIcon
-import random
 
-# Initialize pygame mixer
+# Initialize pygame mixer for audio playback.
 pygame.mixer.init()
 
 class MusicPlayer(QWidget):
@@ -74,26 +74,29 @@ class MusicPlayer(QWidget):
 
         # Add a widget for the song playlist.
         self.playlist_widget = QListWidget(self)
+        self.playlist_widget.itemDoubleClicked.connect(self.play_selected_audio_file)
         self.layout.addWidget(self.playlist_widget)
 
-        # Add a label for the current song playing,
-        self.current_song_label = QLabel("No Song Playing", self)
-        self.current_song_label.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(self.current_song_label)
+        # Add a label for the current song playing.
+        self.active_audio_name_label = QLabel("No Song Playing", self)
+        self.active_audio_name_label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.active_audio_name_label)
 
         # Add a bar for the current playtime, the total duration of the song, and the seek slider.
         self.slider_layout = QHBoxLayout()
 
-        self.current_time_label = QLabel("0:00", self)
-        self.slider_layout.addWidget(self.current_time_label)
+        self.current_playtime_label = QLabel("0:00", self)
+        self.slider_layout.addWidget(self.current_playtime_label)
 
         self.seek_slider = QSlider(Qt.Horizontal, self)
-        self.seek_slider.setRange(0, 100)
-        #self.seek_slider.sliderReleased.connect(self.scrub_song)
+        self.seek_slider.setMinimum(0)
+        self.seek_slider.setValue(0)
+        self.seek_slider.sliderPressed.connect(self.seek_slider_grabbed)
+        self.seek_slider.sliderReleased.connect(self.seek_slider_released)
         self.slider_layout.addWidget(self.seek_slider)
 
-        self.song_length_label = QLabel("0:00", self)
-        self.slider_layout.addWidget(self.song_length_label)
+        self.audio_length_label = QLabel("0:00", self)
+        self.slider_layout.addWidget(self.audio_length_label)
 
         self.layout.addLayout(self.slider_layout)
 
@@ -101,37 +104,39 @@ class MusicPlayer(QWidget):
         self.controls_layout = QHBoxLayout()
 
         self.prev_button = QPushButton("|◁", self)
-        self.prev_button.clicked.connect(self.prev_song)
+        self.prev_button.clicked.connect(self.play_previous_audio_file)
         self.prev_button.setToolTip("Plays the previous audio file.")
         self.controls_layout.addWidget(self.prev_button)
 
         self.play_button = QPushButton("▶", self)
-        self.play_button.clicked.connect(self.toggle_play_pause)
+        self.play_button.clicked.connect(self.trigger_play_button)
         self.play_button.setToolTip("Plays the currently selected audio file.")
         self.controls_layout.addWidget(self.play_button)
 
         self.next_button = QPushButton("▷|", self)
-        self.next_button.clicked.connect(self.next_song)
+        self.next_button.clicked.connect(self.play_next_audio_file)
         self.next_button.setToolTip("Plays the next audio file.")
         self.controls_layout.addWidget(self.next_button)
 
         self.layout.addLayout(self.controls_layout)
         self.setLayout(self.layout)
 
+        # Add a timer to update the seek bar.
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.timer_trigger)
+        self.timer.start(100)
+
         # Enable drag and drop functionality so users can
         # drag and drop their audio files into the app.
         self.setAcceptDrops(True)
 
         # Set variables for handling audio playback.
+        self.active_playlist_index = -1
         self.audio_file_paths = []
         self.shuffled_playlist = []
         self.paused = False
-        self.current_song = ""
-
-        # Add variables for playback settings.
-        self.loop = False
-        self.shuffle = True
-        self.crossfade = True
+        self.slider_grabbed = False
+        self.last_seek_position = 0
 
     def show_settings_menu(self):
         '''Shows the settings menu without the automatic drop-down arrow.'''
@@ -163,6 +168,8 @@ class MusicPlayer(QWidget):
         audio_file_name = os.path.splitext(audio_file_name)[0]
         item = QListWidgetItem(audio_file_name)
         self.playlist_widget.addItem(item)
+
+        # Log the newly added files.
         print("Added audio file: " + audio_file_name)
         self.audio_file_paths.append(file_path)
         print("Added audio path: " + file_path)
@@ -204,61 +211,108 @@ class MusicPlayer(QWidget):
         '''Clears the entier audio playlist.'''
         self.playlist_widget.clear()
         self.audio_file_paths.clear()
+        pygame.mixer.music.stop()
 
-    def toggle_play_pause(self):
-        '''Toggles between pause and play to batch functionality into one button.'''
-        if self.paused:
-            self.play_music()
-        else:
-            self.pause_music()
+        # Reset variables and UI.
+        self.active_playlist_index = -1
+        self.last_seek_position = 0
+        self.current_playtime_label.setText("0:00")
+        self.audio_length_label.setText("0:00")
+        self.play_button.setText("▶")
+        self.seek_slider.setValue(0)
 
-    def play_music(self):
-        '''Plays the selected audio file from the playlist.'''
-        selected_items = self.playlist_widget.selectedItems()
+    def play_audio(self, playlist_index):
+        '''Updates the audio currently being played.'''
 
-        # Gets the index of the selected audio file in the playlist.
-        if selected_items:
-            selected_index = self.playlist_widget.row(selected_items[0])
-            audio_file_name = selected_items[0].text()
-            audio_path = self.audio_file_paths[selected_index]
-
-        # If there is no song selected, do nothing.
-        else:
+        # If there is no audio files in the playlist, do nothing.
+        if self.playlist_widget.count() <= 0:
+            print("No audio in the playlist to play.")
             return
 
-        # If the user is selecting a different song other than
-        # the one being played, play that song.
-        if self.current_song != audio_file_name:
-            pygame.mixer.music.load(audio_path)
-            pygame.mixer.music.play()
-            self.paused = False
-            self.current_song = audio_file_name
+        # Clamp active playlist index between 0 and the playlist length.
+        playlist_index = max(
+            0,
+            min(playlist_index, self.playlist_widget.count())
+        )
 
-        else:
-            # If the audio isn't paused, play the song from the beginning.
-            if not self.paused:
-                pygame.mixer.music.load(audio_path)
-                pygame.mixer.music.play()
-                self.paused = False
-                self.current_song = audio_file_name
+        # Update the playlist index to the next index that should be played.
+        self.active_playlist_index = playlist_index
+        playlist_item = self.playlist_widget.item(self.active_playlist_index)
+        self.playlist_widget.clearSelection()
+        playlist_item.setSelected(True)
 
-            # Otherwise, unpause the audio.
-            else:
-                pygame.mixer.music.unpause()
-                self.paused = False
+        # Play the audio file.
+        audio_path = self.audio_file_paths[self.active_playlist_index]
+        pygame.mixer.music.load(audio_path)
+        pygame.mixer.music.play(start=0)
 
-        # Update UI elements.
+        # Update the active audio name label.
+        self.active_audio_name_label.setText(playlist_item.text())
+
+        # Reset the current playtime label.
+        self.current_playtime_label.setText("0:00")
+
+        # Update the audio length label.
+        sound = pygame.mixer.Sound(audio_path)
+        audio_length = sound.get_length()
+        formatted_audio_length = self.format_time(audio_length)
+        self.audio_length_label.setText(formatted_audio_length)
+
+        # Change the play button to a pause button.
+        self.paused = False
         self.play_button.setText("||")
-        self.current_song_label.setText(audio_file_name)
 
-    def pause_music(self):
-        '''Pauses the audio file being played.'''
-        pygame.mixer.music.pause()
-        self.play_button.setText("▶")
-        self.paused = True
+        # Reset the stored seek position.
+        self.last_seek_position = 0
+
+    def play_selected_audio_file(self):
+        '''Plays the audio file from the playlist.'''
+        selected_items = self.playlist_widget.selectedItems()
+        selected_index = self.playlist_widget.row(selected_items[0])
+        if self.active_playlist_index != selected_index:
+            self.play_audio(selected_index)
+            return
+
+    def trigger_play_button(self):
+        '''Trigger function for the play button.'''
+
+        # If the user has selected a different audio file other
+        # than the one playing, play that file instead.
+        selected_items = self.playlist_widget.selectedItems()
+        if selected_items:
+            selected_item = selected_items[0]
+            selected_index = self.playlist_widget.row(selected_item)
+            if self.active_playlist_index != selected_index:
+                self.play_audio(selected_index)
+                print("Playing user selected track.")
+                return
+
+        # If there is no audio playing, always play audio.
+        if self.active_playlist_index == -1:
+            self.play_audio(self.active_playlist_index)
+            print("Playing song, no audio was playing.")
+            return
+
+        # If the audio is paused, unpause it.
+        if self.paused is True:
+            pygame.mixer.music.unpause()
+            self.paused = False
+            print("Unpaused audio playback.")
+
+        # Otherwise pause the audio.
+        else:
+            pygame.mixer.music.pause()
+            self.play_button.setText("▶")
+            self.paused = True
+            print("Paused audio playback.")
 
     def shuffle_playlist(self):
         '''Randomly re-orders all audio files in the playlist.'''
+
+        # If shuffle is disabled, do nothing.
+        if self.shuffle_action.isChecked() is False:
+            return
+
         if self.playlist_widget.count() > 0:
             # Create a list of audio names and their corresponding file paths.
             audio_names = [
@@ -283,7 +337,7 @@ class MusicPlayer(QWidget):
 
             print("Shuffled playlist.")
 
-    def next_song(self):
+    def play_next_audio_file(self):
         '''Plays the next audio file in the playlist.'''
 
         # If there are no songs to play, do nothing.
@@ -291,45 +345,33 @@ class MusicPlayer(QWidget):
             print("No audio files in playlist to play.")
             return
 
-        # If the current song isn't defined,
-        # play the first song in the playlist.
-        if self.current_song == "":
-            audio_path = self.audio_file_paths[0]
-            playlist_item = self.playlist_widget.item(0)
-            audio_file_name = playlist_item.text()
-            pygame.mixer.music.load(audio_path)
-            pygame.mixer.music.play()
-            self.paused = False
-            self.current_song = audio_file_name
+        # Play and select the next audio file in the playlist.
+        if self.active_playlist_index < self.playlist_widget.count() - 1:
+            self.play_audio(self.active_playlist_index + 1)
 
-            # Reset the selection.
-            self.playlist_widget.clearSelection()
-            playlist_item.setSelected(True)
+        # If the last song in the playlist was being played, reset the playlist.
+        else:
+            self.active_playlist_index = 0
+            self.shuffle_playlist()
+            self.play_audio(self.active_playlist_index)
 
-    def prev_song(self):
+    def play_previous_audio_file(self):
         '''Plays the previous audio file in the playlist.'''
 
         # If there are no songs to play, do nothing.
         if self.playlist_widget.count() <= 0:
             print("No audio files in playlist to play.")
             return
-        
-        # If the current song isn't defined,
-        # play the first song in the playlist.
-        # If the current song isn't defined,
-        # play the first song in the playlist.
-        if self.current_song == "":
-            audio_path = self.audio_file_paths[0]
-            playlist_item = self.playlist_widget.item(0)
-            audio_file_name = playlist_item.text()
-            pygame.mixer.music.load(audio_path)
-            pygame.mixer.music.play()
-            self.paused = False
-            self.current_song = audio_file_name
 
-            # Reset the selection.
-            self.playlist_widget.clearSelection()
-            playlist_item.setSelected(True)
+        # Play and select the next audio file in the playlist.
+        if self.active_playlist_index > 0:
+            self.play_audio(self.active_playlist_index - 1)
+
+        # If the last song in the playlist was being played, reset the playlist.
+        else:
+            self.active_playlist_index = 0
+            self.shuffle_playlist()
+            self.play_audio(self.active_playlist_index)
 
     def dragEnterEvent(self, event: QDragEnterEvent):
         '''Handles drag enter events to support dragging and dropping files into the app.'''
@@ -345,14 +387,77 @@ class MusicPlayer(QWidget):
             if os.path.isfile(file_path):
                 self.add_audio_file(file_path)
 
-        # Play the next song after the user drops music into the application.
-        self.next_song()
+    def get_playlist_index_by_name(self, audio_name):
+        '''Returns the index of the song by searching for the playlist name.'''
+        matching_items = self.playlist_widget.findItems(audio_name, Qt.MatchExactly)
+        if matching_items:
+            return self.playlist_widget.row(matching_items[0])
+        else:
+            return -1
+
+    def timer_trigger(self):
+        '''Triggers updates for user interface every few miliseconds.'''
+
+        # Update the seek slider position, excluding when it's
+        # not playing music, or manually grabbed.
+        if pygame.mixer.music.get_busy() is True:
+            if self.slider_grabbed is False:
+                self.update_seek_slider_position()
+
+        # If the song has ended, play the next song.
+        if self.audio_length_label.text() != "0:00":
+            if self.current_playtime_label.text() == self.audio_length_label.text():
+                if self.loop_action.isChecked() is True:
+                    audio_name = self.active_audio_name_label.text()
+                    loop_index = self.get_playlist_index_by_name(audio_name)
+                    self.play_audio(loop_index)
+                else:
+                    self.play_next_audio_file()
+
+    def update_seek_slider_position(self):
+        '''Updates the current seek sliders position.'''
+        if hasattr(self, 'last_seek_position') and self.last_seek_position is not None:
+            current_position = self.last_seek_position + (pygame.mixer.music.get_pos() / 1000)
+        else:
+            current_position = pygame.mixer.music.get_pos() / 1000
+
+        self.seek_slider.setValue(int(current_position))
+
+        total_duration = self.time_to_seconds(self.audio_length_label.text())
+        self.seek_slider.setMaximum(int(total_duration))
+
+        current_playtime = self.format_time(current_position)
+        self.current_playtime_label.setText(current_playtime)
+
+    def seek_slider_grabbed(self):
+        '''Triggers when the seek slider is grabbed.'''
+        self.slider_grabbed = True
+        print("User grabbed the seek slider.")
+
+    def seek_slider_released(self):
+        '''Triggers when the seek slider is released.'''
+        self.slider_grabbed = False
+        print("User released seek slider.")
+
+        seek_time = self.seek_slider.value()
+        print("User seeked to: " + str(seek_time))
+
+        pygame.mixer.music.pause()
+        pygame.mixer.music.play(start=seek_time)
+
+        self.last_seek_position = seek_time
+        self.update_seek_slider_position()
 
     def format_time(self, seconds):
         '''Formats song time into minutes and seconds.'''
         minutes = int(seconds // 60)
         seconds = int(seconds % 60)
         return f"{minutes}:{seconds:02d}"
+
+    def time_to_seconds(self, time):
+        '''Converts time in mm:ss format to seconds.'''
+        minutes, seconds = map(int, time.split(":"))
+        return minutes * 60 + seconds
 
 def main():
     '''Primary function for running the Python application.'''
