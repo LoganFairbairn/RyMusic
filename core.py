@@ -15,6 +15,7 @@ class MusicPlayer(QWidget):
 
         # Define the app window settings.
         self.setWindowTitle('RyMusic')
+        self.setWindowIcon(QIcon("./icons/desktop_icon.png"))
         self.setFixedSize(400, 600)
 
         # Load CSS for style.
