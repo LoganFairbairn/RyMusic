@@ -210,6 +210,7 @@ class MusicPlayer(QWidget):
         pygame.mixer.music.stop()
 
         # Reset variables and UI.
+        self.active_audio_name_label.setText("No Song Playing")
         self.active_playlist_index = -1
         self.last_seek_position = 0
         self.current_playtime_label.setText("0:00")
