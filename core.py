@@ -15,11 +15,12 @@ class MusicPlayer(QWidget):
 
         # Define the app window settings.
         self.setWindowTitle('RyMusic')
-        self.setWindowIcon(QIcon("./icons/desktop_icon.png"))
+        icon_path = self.get_resource_path('icons/desktop_icon.png')
+        self.setWindowIcon(QIcon(icon_path))
         self.setFixedSize(400, 600)
 
         # Load CSS for style.
-        self.load_stylesheet()
+        self.load_css()
 
         # Add user interface for the application.
         self.layout = QVBoxLayout()
@@ -45,7 +46,8 @@ class MusicPlayer(QWidget):
         self.clear_playlist_button.clicked.connect(self.clear_playlist)
         self.clear_playlist_button.setFixedSize(40, 40)
         self.clear_playlist_button.setToolTip("Clears the entier playlist.")
-        self.clear_playlist_button.setIcon(QIcon("./icons/clear_all.png"))
+        icon_path = self.get_resource_path('icons/clear_all.png')
+        self.clear_playlist_button.setIcon(QIcon(icon_path))
         self.playlist_settings_layout.addWidget(self.clear_playlist_button)
 
         # Add a settings menu (hamburger) button on the right side of this layout.
@@ -143,14 +145,9 @@ class MusicPlayer(QWidget):
         '''Shows the settings menu without the automatic drop-down arrow.'''
         self.menu.exec_(self.settings_menu.mapToGlobal(self.settings_menu.rect().bottomLeft()))
 
-    def load_stylesheet(self):
-        '''Loads external CSS styling.'''
-        try:
-            with open('style.css', 'r') as f:
-                css = f.read()
-                self.setStyleSheet(css)
-        except FileNotFoundError:
-            print("CSS file not found!")
+    def load_css(self):
+        '''Loads CSS styling.'''
+        self.setStyleSheet("background-color: #181818; color: white; font-family: var(--vscode-font-family, Consolas, 'Courier New', monospace); } QMenuBar { background-color: #2c2c2c; color: white; padding: 5px; } QMenu { background-color: #2c2c2c; padding: 5px; } QAction { padding: 5px; color: white; } QPushButton { background-color: #181818; border-radius: 7px; color: white; padding: 10px; font-weight: 900; } QPushButton:hover { background-color: #2c2c2c; } QLabel { font-size: 18px; color: white; padding: 10px; } QListWidget { background-color: #2c2c2c; color: white; border: 1px solid #575757; border-radius: 7px; padding: 5px; } QListWidgetItem { background-color: #181818; color: white; } QListWidgetItem:hover { background-color: #1f9aff; color: white; } QScrollBar:vertical { border: none; background: #ddd; width: 10px; margin: 2px 2px 2px 2px; border-radius: 5px; } QScrollBar::handle:vertical { background: #888; min-height: 20px; border-radius: 5px; } QScrollBar::handle:vertical:hover { background: #666; } QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { background: none; border: none; height: 0px; } QScrollBar:horizontal { border: none; background: #ddd; height: 10px; margin: 2px 2px 2px 2px; border-radius: 5px; } QScrollBar::handle:horizontal { background: #888; min-width: 20px; border-radius: 5px; } QScrollBar::handle:horizontal:hover { background: #666; } QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { background: none; border: none; width: 0px;")
 
     def add_audio_files(self):
         '''Opens a file browser so the user can select audio files to add to the playlist.'''
@@ -459,6 +456,13 @@ class MusicPlayer(QWidget):
         '''Converts time in mm:ss format to seconds.'''
         minutes, seconds = map(int, time.split(":"))
         return minutes * 60 + seconds
+    
+    def get_resource_path(self, resource_name):
+        """Get the path to the resource, whether in the bundled app or in development."""
+        if hasattr(sys, '_MEIPASS'):  # If running in the packaged app
+            return os.path.join(sys._MEIPASS, resource_name)
+        else:
+            return resource_name  # Use the resource path in development
 
 def main():
     '''Primary function for running the Python application.'''
