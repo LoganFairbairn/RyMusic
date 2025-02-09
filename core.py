@@ -292,6 +292,7 @@ class MusicPlayer(QWidget):
         if self.paused is True:
             pygame.mixer.music.unpause()
             self.paused = False
+            self.play_button.setText("||")
             print("Unpaused audio playback.")
 
         # Otherwise pause the audio.
