@@ -156,6 +156,7 @@ class MusicPlayer(QWidget):
             for file_path in files:
                 self.add_audio_file(file_path)
         self.shuffle_playlist()
+        self.play_next_audio_file()
 
     def add_audio_file(self, file_path):
         '''Adds an audio file to the playlist.'''
@@ -385,6 +386,7 @@ class MusicPlayer(QWidget):
 
         # Shuffle the playlist after the user drops audio files into the app.
         self.shuffle_playlist()
+        self.play_next_audio_file()
 
     def get_playlist_index_by_name(self, audio_name):
         '''Returns the index of the song by searching for the playlist name.'''
