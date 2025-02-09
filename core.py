@@ -385,6 +385,9 @@ class MusicPlayer(QWidget):
             if os.path.isfile(file_path):
                 self.add_audio_file(file_path)
 
+        # Shuffle the playlist after the user drops audio files into the app.
+        self.shuffle_playlist()
+
     def get_playlist_index_by_name(self, audio_name):
         '''Returns the index of the song by searching for the playlist name.'''
         matching_items = self.playlist_widget.findItems(audio_name, Qt.MatchExactly)
