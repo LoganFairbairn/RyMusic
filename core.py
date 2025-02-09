@@ -69,9 +69,6 @@ class MusicPlayer(QWidget):
         self.shuffle_action.setChecked(True)
         self.menu.addAction(self.shuffle_action)
 
-        self.crossfade_action = QAction("Crossfade", self, checkable=True)
-        self.menu.addAction(self.crossfade_action)
-
         # Add the playlist settings layout to the apps main layout.
         self.layout.addLayout(self.playlist_settings_layout)
 
