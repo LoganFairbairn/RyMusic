@@ -52,7 +52,7 @@ class MusicPlayer(QWidget):
         self.shuffle_button.setIcon(QIcon(shuffle_icon_path))
         self.shuffle_button.setCheckable(True)
         self.shuffle_button.setChecked(True)
-        self.shuffle_button.setToolTip("Toggles shuffling for audio files on / off.")
+        self.shuffle_button.setToolTip("Toggles shuffling for audio files.")
         self.shuffle_button.clicked.connect(self.toggle_shuffle)
         self.playlist_settings_layout.addWidget(self.shuffle_button)
 
@@ -61,7 +61,7 @@ class MusicPlayer(QWidget):
         self.loop_button.setIcon(QIcon(loop_icon_path))
         self.loop_button.setCheckable(True)
         self.loop_button.setChecked(False)
-        self.loop_button.setToolTip("Toggles looping for the currently selected audio file on / off.")
+        self.loop_button.setToolTip("Toggles looping for the audio file being played.")
         self.playlist_settings_layout.addWidget(self.loop_button)
 
         # Add the playlist settings layout to the apps main layout.
@@ -153,12 +153,19 @@ class MusicPlayer(QWidget):
         file_dialog = QFileDialog()
         file_dialog.setFileMode(QFileDialog.ExistingFiles)
         file_dialog.setNameFilter("Audio Files (*.mp3 *.wav *.ogg *.flac)")
+        added_file = False
         if file_dialog.exec_():
             files = file_dialog.selectedFiles()
             for file_path in files:
                 self.add_audio_file(file_path)
-        self.shuffle_playlist()
-        self.play_next_audio_file()
+                added_file = True
+
+        # If at least one file was added, shuffle the playlist.
+        if added_file:
+            self.shuffle_playlist()
+
+        # Select the last audio file in the playlist.
+        self.select_last_audio_file()
 
     def add_audio_file(self, file_path):
         '''Adds an audio file to the playlist.'''
@@ -171,7 +178,6 @@ class MusicPlayer(QWidget):
         print("Added audio file: " + audio_file_name)
         self.audio_file_paths.append(file_path)
         print("Added audio path: " + file_path)
-        self.reselect_audio_file()
 
     def remove_audio_file(self):
         '''Removes all selected audio files from the playlist.'''
@@ -193,17 +199,12 @@ class MusicPlayer(QWidget):
 
             self.reselect_audio_file()
 
-    def reselect_audio_file(self):
-        '''Reselects an audio file from the playlist if no audio file is selected.'''
-        any_audio_file_selected = False
-        for row in range(self.playlist_widget.count()):
-            item = self.playlist_widget.item(row)
-            if item.isSelected():
-                any_audio_file_selected = True
-                break
-
-        if not any_audio_file_selected and self.playlist_widget.count() > 0:
-            self.playlist_widget.setCurrentRow(self.playlist_widget.count() - 1)
+    def select_last_audio_file(self):
+        '''Selects the last audio file in the playlist.'''
+        playlist_length = self.playlist_widget.count()
+        playlist_item = self.playlist_widget.item(playlist_length - 1)
+        self.playlist_widget.clearSelection()
+        playlist_item.setSelected(True)
 
     def clear_playlist(self):
         '''Clears the entier audio playlist.'''
@@ -316,7 +317,7 @@ class MusicPlayer(QWidget):
         # If there are no audio files to shuffle, do nothing.
         if self.playlist_widget.count() <= 0:
             return
-        
+
         # Create a list of audio names and their corresponding file paths.
         audio_names = [
             self.playlist_widget.item(i).text() for i in range(self.playlist_widget.count())
@@ -338,17 +339,15 @@ class MusicPlayer(QWidget):
         self.playlist_widget.clear()
         self.playlist_widget.addItems(shuffled_audio_names)
 
-        # Select the currently playing audio file (if one exists).
+        # If an audio file was playing when the playlist was shuffled,
+        # select the currently playing audio file.
         audio_name = self.active_audio_name_label.text()
         audio_index = self.get_playlist_index_by_name(audio_name)
-        if audio_index != 1:
+        if audio_index != -1:
             self.active_playlist_index = audio_index
-        else:
-            self.active_playlist_index = 0
-
-        playlist_item = self.playlist_widget.item(self.active_playlist_index)
-        self.playlist_widget.clearSelection()
-        playlist_item.setSelected(True)
+            playlist_item = self.playlist_widget.item(self.active_playlist_index)
+            self.playlist_widget.clearSelection()
+            playlist_item.setSelected(True)
 
         print("Shuffled playlist.")
 
@@ -397,14 +396,19 @@ class MusicPlayer(QWidget):
 
     def dropEvent(self, event: QDropEvent):
         '''Handles drag and dropping files into the app.'''
+        file_added = False
         for url in event.mimeData().urls():
             file_path = url.toLocalFile()
             if os.path.isfile(file_path):
                 self.add_audio_file(file_path)
+                file_added = True
 
-        # Shuffle the playlist after the user drops audio files into the app.
-        self.shuffle_playlist()
-        self.play_next_audio_file()
+        # If at least one audio file was added, shuffle the playlist.
+        if file_added:
+            self.shuffle_playlist()
+
+        # Select the last audio file in the playlist.
+        self.select_last_audio_file()
 
     def get_playlist_index_by_name(self, audio_name):
         '''Returns the index of the song by searching for the playlist name.'''
