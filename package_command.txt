@@ -1,0 +1,6 @@
+This is the command to package the application using pyinstaller.
+
+pyinstaller --onefile --windowed \
+    --add-data "style.css:." \
+    --add-data "icons:icons" \
+    --icon=icons/app_icon.png main.py
