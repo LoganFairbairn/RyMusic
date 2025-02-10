@@ -101,16 +101,19 @@ class MusicPlayer(QWidget):
         self.prev_button = QPushButton("|◁", self)
         self.prev_button.clicked.connect(self.play_previous_audio_file)
         self.prev_button.setToolTip("Plays the previous audio file.")
+        self.prev_button.setFixedHeight(40)
         self.controls_layout.addWidget(self.prev_button)
 
         self.play_button = QPushButton("▶", self)
         self.play_button.clicked.connect(self.trigger_play_button)
         self.play_button.setToolTip("Plays the currently selected audio file.")
+        self.play_button.setFixedHeight(40)
         self.controls_layout.addWidget(self.play_button)
 
         self.next_button = QPushButton("▷|", self)
         self.next_button.clicked.connect(self.play_next_audio_file)
         self.next_button.setToolTip("Plays the next audio file.")
+        self.next_button.setFixedHeight(40)
         self.controls_layout.addWidget(self.next_button)
 
         self.layout.addLayout(self.controls_layout)
