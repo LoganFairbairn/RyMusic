@@ -53,6 +53,7 @@ class MusicPlayer(QWidget):
         self.shuffle_button.setCheckable(True)
         self.shuffle_button.setChecked(True)
         self.shuffle_button.setToolTip("Toggles shuffling for audio files on / off.")
+        self.shuffle_button.clicked.connect(self.toggle_shuffle)
         self.playlist_settings_layout.addWidget(self.shuffle_button)
 
         loop_icon_path = self.get_resource_path('icons/loop_icon.png')
@@ -141,6 +142,11 @@ class MusicPlayer(QWidget):
                 self.setStyleSheet(css)
         except FileNotFoundError:
             print("CSS file not found!")
+
+    def toggle_shuffle(self):
+        '''Toggles shuffling for audio files.'''
+        if self.shuffle_button.isChecked():
+            self.shuffle_playlist()
 
     def add_audio_files(self):
         '''Opens a file browser so the user can select audio files to add to the playlist.'''
@@ -307,29 +313,44 @@ class MusicPlayer(QWidget):
         if self.shuffle_button.isChecked() is False:
             return
 
-        if self.playlist_widget.count() > 0:
-            # Create a list of audio names and their corresponding file paths.
-            audio_names = [
-                self.playlist_widget.item(i).text() for i in range(self.playlist_widget.count())
-            ]
-            audio_paths = self.audio_file_paths
+        # If there are no audio files to shuffle, do nothing.
+        if self.playlist_widget.count() <= 0:
+            return
+        
+        # Create a list of audio names and their corresponding file paths.
+        audio_names = [
+            self.playlist_widget.item(i).text() for i in range(self.playlist_widget.count())
+        ]
+        audio_paths = self.audio_file_paths
 
-            # Shuffle the combined list of paths and names.
-            combined = list(zip(audio_paths, audio_names))
-            random.shuffle(combined)
+        # Shuffle the combined list of paths and names.
+        combined = list(zip(audio_paths, audio_names))
+        random.shuffle(combined)
 
-            # Unzip the shuffled combined list back into audio_paths and audio_names.
-            self.audio_file_paths, shuffled_audio_names = zip(*combined)
+        # Unzip the shuffled combined list back into audio_paths and audio_names.
+        self.audio_file_paths, shuffled_audio_names = zip(*combined)
 
-            # Convert back to lists.
-            self.audio_file_paths = list(self.audio_file_paths)
-            shuffled_audio_names = list(shuffled_audio_names)
+        # Convert back to lists.
+        self.audio_file_paths = list(self.audio_file_paths)
+        shuffled_audio_names = list(shuffled_audio_names)
 
-            # Update the items in the playlist widget.
-            self.playlist_widget.clear()
-            self.playlist_widget.addItems(shuffled_audio_names)
+        # Update the items in the playlist widget.
+        self.playlist_widget.clear()
+        self.playlist_widget.addItems(shuffled_audio_names)
 
-            print("Shuffled playlist.")
+        # Select the currently playing audio file (if one exists).
+        audio_name = self.active_audio_name_label.text()
+        audio_index = self.get_playlist_index_by_name(audio_name)
+        if audio_index != 1:
+            self.active_playlist_index = audio_index
+        else:
+            self.active_playlist_index = 0
+
+        playlist_item = self.playlist_widget.item(self.active_playlist_index)
+        self.playlist_widget.clearSelection()
+        playlist_item.setSelected(True)
+
+        print("Shuffled playlist.")
 
     def play_next_audio_file(self):
         '''Plays the next audio file in the playlist.'''
