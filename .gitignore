@@ -5,3 +5,5 @@
 *.code-workspace
 *.kra~
 *.png~
+*kra-autosave.kra
+*kra-autosave
