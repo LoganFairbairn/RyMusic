@@ -2,7 +2,7 @@ import sys
 import os
 import random
 import pygame
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QListWidget, QListWidgetItem, QSlider, QFileDialog, QMenu, QAction
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QListWidget, QListWidgetItem, QSlider, QFileDialog, QSizePolicy
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QIcon
 
@@ -15,8 +15,8 @@ class MusicPlayer(QWidget):
 
         # Define the app window settings.
         self.setWindowTitle('RyMusic')
-        icon_path = self.get_resource_path('icons/desktop_icon.png')
-        self.setWindowIcon(QIcon(icon_path))
+        app_icon_path = self.get_resource_path('icons/app_icon.png')
+        self.setWindowIcon(QIcon(app_icon_path))
         self.setFixedSize(400, 600)
 
         # Load CSS for style.
@@ -30,7 +30,6 @@ class MusicPlayer(QWidget):
 
         self.add_audio_files_button = QPushButton("+", self)
         self.add_audio_files_button.clicked.connect(self.add_audio_files)
-        self.add_audio_files_button.setFixedSize(40, 40)
         self.add_audio_files_button.setToolTip(
             "Opens a file explorer so you can select new songs to add to the playlist."
         )
@@ -38,36 +37,31 @@ class MusicPlayer(QWidget):
 
         self.remove_audio_file_button = QPushButton("-", self)
         self.remove_audio_file_button.clicked.connect(self.remove_audio_file)
-        self.remove_audio_file_button.setFixedSize(40, 40)
         self.remove_audio_file_button.setToolTip("Removes the selected song from the playlist.")
         self.playlist_settings_layout.addWidget(self.remove_audio_file_button)
 
         self.clear_playlist_button = QPushButton("", self)
         self.clear_playlist_button.clicked.connect(self.clear_playlist)
-        self.clear_playlist_button.setFixedSize(40, 40)
-        self.clear_playlist_button.setToolTip("Clears the entier playlist.")
-        icon_path = self.get_resource_path('icons/clear_all.png')
-        self.clear_playlist_button.setIcon(QIcon(icon_path))
+        self.clear_playlist_button.setToolTip("Clears the entire playlist.")
+        clear_all_icon_path = self.get_resource_path('icons/clear_all.png')
+        self.clear_playlist_button.setIcon(QIcon(clear_all_icon_path))
         self.playlist_settings_layout.addWidget(self.clear_playlist_button)
 
-        # Add a settings menu (hamburger) button on the right side of this layout.
-        settings_menu_layout = QHBoxLayout()
-        settings_menu_layout.addStretch()
-        self.settings_menu = QPushButton("☰", self)
-        self.settings_menu.setFixedSize(40, 40)
-        self.settings_menu.setStyleSheet("font-size: 18px;")
-        settings_menu_layout.addWidget(self.settings_menu)
-        self.playlist_settings_layout.addLayout(settings_menu_layout)
-        self.settings_menu.clicked.connect(self.show_settings_menu)
+        shuffle_icon_path = self.get_resource_path('icons/shuffle_icon.png')
+        self.shuffle_button = QPushButton("", self)
+        self.shuffle_button.setIcon(QIcon(shuffle_icon_path))
+        self.shuffle_button.setCheckable(True)
+        self.shuffle_button.setChecked(True)
+        self.shuffle_button.setToolTip("Toggles shuffling for audio files on / off.")
+        self.playlist_settings_layout.addWidget(self.shuffle_button)
 
-        # Add settings to the settings menu.
-        self.menu = QMenu(self)
-        self.loop_action = QAction("Loop", self, checkable=True)
-        self.menu.addAction(self.loop_action)
-
-        self.shuffle_action = QAction("Shuffle", self, checkable=True)
-        self.shuffle_action.setChecked(True)
-        self.menu.addAction(self.shuffle_action)
+        loop_icon_path = self.get_resource_path('icons/loop_icon.png')
+        self.loop_button = QPushButton("", self)
+        self.loop_button.setIcon(QIcon(loop_icon_path))
+        self.loop_button.setCheckable(True)
+        self.loop_button.setChecked(False)
+        self.loop_button.setToolTip("Toggles looping for the currently selected audio file on / off.")
+        self.playlist_settings_layout.addWidget(self.loop_button)
 
         # Add the playlist settings layout to the apps main layout.
         self.layout.addLayout(self.playlist_settings_layout)
@@ -137,10 +131,6 @@ class MusicPlayer(QWidget):
         self.paused = False
         self.slider_grabbed = False
         self.last_seek_position = 0
-
-    def show_settings_menu(self):
-        '''Shows the settings menu without the automatic drop-down arrow.'''
-        self.menu.exec_(self.settings_menu.mapToGlobal(self.settings_menu.rect().bottomLeft()))
 
     def load_stylesheet(self):
         '''Loads external CSS styling.'''
@@ -314,7 +304,7 @@ class MusicPlayer(QWidget):
         '''Randomly re-orders all audio files in the playlist.'''
 
         # If shuffle is disabled, do nothing.
-        if self.shuffle_action.isChecked() is False:
+        if self.shuffle_button.isChecked() is False:
             return
 
         if self.playlist_widget.count() > 0:
@@ -415,7 +405,7 @@ class MusicPlayer(QWidget):
         # If the song has ended, play the next song.
         if self.audio_length_label.text() != "0:00":
             if self.current_playtime_label.text() == self.audio_length_label.text():
-                if self.loop_action.isChecked() is True:
+                if self.loop_button.isChecked() is True:
                     audio_name = self.active_audio_name_label.text()
                     loop_index = self.get_playlist_index_by_name(audio_name)
                     self.play_audio(loop_index)
