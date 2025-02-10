@@ -55,7 +55,7 @@ class MusicPlayer(QWidget):
         settings_menu_layout.addStretch()
         self.settings_menu = QPushButton("☰", self)
         self.settings_menu.setFixedSize(40, 40)
-        self.settings_menu.setStyleSheet("font-size: 18px; padding: 5px; border: none;")
+        self.settings_menu.setStyleSheet("font-size: 18px;")
         settings_menu_layout.addWidget(self.settings_menu)
         self.playlist_settings_layout.addLayout(settings_menu_layout)
         self.settings_menu.clicked.connect(self.show_settings_menu)
