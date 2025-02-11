@@ -168,7 +168,7 @@ class MusicPlayer(QWidget):
             self.shuffle_playlist()
 
         # Select the last audio file in the playlist.
-        self.select_last_audio_file()
+        self.reset_selected_audio_file()
 
     def add_audio_file(self, file_path):
         '''Adds an audio file to the playlist.'''
@@ -202,12 +202,29 @@ class MusicPlayer(QWidget):
 
             self.reselect_audio_file()
 
-    def select_last_audio_file(self):
-        '''Selects the last audio file in the playlist.'''
-        playlist_length = self.playlist_widget.count()
-        playlist_item = self.playlist_widget.item(playlist_length - 1)
-        self.playlist_widget.clearSelection()
-        playlist_item.setSelected(True)
+    def reset_selected_audio_file(self):
+        '''Re-selects the audio file currently being played.'''
+
+        # If there are no files in the playlist, reset
+        # the active index to -1.
+        if self.playlist_widget.count() <= 0:
+            self.active_playlist_index = -1
+            return
+
+        # If an audio file is playing, select that one.
+        audio_name = self.active_audio_name_label.text()
+        audio_index = self.get_playlist_index_by_name(audio_name)
+        if audio_index != -1:
+            self.active_playlist_index = audio_index
+            playlist_item = self.playlist_widget.item(self.active_playlist_index)
+            self.playlist_widget.clearSelection()
+            playlist_item.setSelected(True)
+
+        # Otherwise select the first index.
+        else:
+            playlist_item = self.playlist_widget.item(0)
+            self.playlist_widget.clearSelection()
+            playlist_item.setSelected(True)
 
     def clear_playlist(self):
         '''Clears the entier audio playlist.'''
@@ -411,7 +428,7 @@ class MusicPlayer(QWidget):
             self.shuffle_playlist()
 
         # Select the last audio file in the playlist.
-        self.select_last_audio_file()
+        self.reset_selected_audio_file()
 
     def get_playlist_index_by_name(self, audio_name):
         '''Returns the index of the song by searching for the playlist name.'''
