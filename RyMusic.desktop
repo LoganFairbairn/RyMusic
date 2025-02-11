@@ -2,7 +2,7 @@
 Name=RyMusic
 Comment=A simple local audio file player.
 Exec=/media/logan/MainDrive/Projects/RyMusic/dist/RyMusic
-Icon=/media/logan/MainDrive/Projects/RyMusic/icons/desktop_icon.png
+Icon=/media/logan/MainDrive/Projects/RyMusic/icons/app_icon.png
 Terminal=false
 Type=Application
 Categories=AudioVideo
