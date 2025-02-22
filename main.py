@@ -2,7 +2,7 @@ import sys
 import os
 import random
 import pygame
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QListWidget, QListWidgetItem, QSlider, QFileDialog, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QListWidget, QListWidgetItem, QSlider, QFileDialog
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QIcon
 
