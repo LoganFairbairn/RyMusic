@@ -206,6 +206,7 @@ class AudioPlayer(QWidget):
             selected_items = self.file_browser.selectedItems()
             if selected_items:
                 play_action = QAction("Play")
+                play_action.triggered.connect(self.play_first_selected_file)
                 menu.addAction(play_action)
 
                 rename_action = QAction("Rename", self)
@@ -233,6 +234,10 @@ class AudioPlayer(QWidget):
             new_folder_action = QAction("Create New Folder")
             new_folder_action.triggered.connect(self.create_new_folder)
             menu.addAction(new_folder_action)
+
+            refresh_directory_action = QAction("Refresh Directory")
+            refresh_directory_action.triggered.connect(self.load_files)
+            menu.addAction(refresh_directory_action)
 
             sort_az_action = QAction("Sort A - Z", self)
             sort_az_action.triggered.connect(self.sort_files)
@@ -353,6 +358,13 @@ class AudioPlayer(QWidget):
                 audio_path = self.get_file_browser_item_path(item)
                 self.play_audio(audio_path)
                 return
+
+    def play_first_selected_file(self):
+        '''Plays the first selected file.'''
+        selected_items = self.file_browser.selectedItems()
+        if selected_items:
+            audio_path = self.get_file_browser_item_path(selected_items[0])
+            self.play_audio(audio_path)
 
     def play_first_audio(self):
         '''Plays the first selected audio file, or the first audio file in the folder if no files are selected.'''
