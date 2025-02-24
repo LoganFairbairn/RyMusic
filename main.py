@@ -74,6 +74,7 @@ class AudioPlayer(QWidget):
         self.folder_path_field = QLineEdit(self)
         self.folder_path_field.setText("/media/logan/xfiles/music")
         self.folder_path_field.setFixedHeight(30)
+        self.folder_path_field.textChanged.connect(self.load_files)
         self.menu_layout.addWidget(self.folder_path_field)
         
         # Create an options menu.
