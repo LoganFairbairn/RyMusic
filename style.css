@@ -11,6 +11,7 @@ QWidget {
 QPushButton {
     background: transparent;
     border: none;
+    padding: 5px;
 }
 
 QPushButton:hover {
