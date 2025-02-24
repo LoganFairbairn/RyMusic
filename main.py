@@ -199,55 +199,53 @@ class AudioPlayer(QWidget):
             print("CSS file not found!")
 
     def show_right_click_menu(self, pos: QPoint):
-        item = self.file_browser.itemAt(pos)
-        if item:
-            menu = QMenu(self)
+        menu = QMenu(self)
 
-            selected_items = self.file_browser.selectedItems()
-            if selected_items:
-                play_action = QAction("Play")
-                play_action.triggered.connect(self.play_first_selected_file)
-                menu.addAction(play_action)
+        selected_items = self.file_browser.selectedItems()
+        if selected_items:
+            play_action = QAction("Play")
+            play_action.triggered.connect(self.play_first_selected_file)
+            menu.addAction(play_action)
 
-                rename_action = QAction("Rename", self)
-                rename_action.triggered.connect(self.rename_file)
-                if len(selected_items) > 1:
-                    rename_action.setEnabled(False)
-                menu.addAction(rename_action)
+            rename_action = QAction("Rename", self)
+            rename_action.triggered.connect(self.rename_file)
+            if len(selected_items) > 1:
+                rename_action.setEnabled(False)
+            menu.addAction(rename_action)
 
-                cut_action = QAction("Cut", self)
-                cut_action.triggered.connect(self.cut_files)
-                menu.addAction(cut_action)
+            cut_action = QAction("Cut", self)
+            cut_action.triggered.connect(self.cut_files)
+            menu.addAction(cut_action)
 
-                copy_action = QAction("Copy", self)
-                copy_action.triggered.connect(self.copy_files)
-                menu.addAction(copy_action)
+            copy_action = QAction("Copy", self)
+            copy_action.triggered.connect(self.copy_files)
+            menu.addAction(copy_action)
 
-                paste_action = QAction("Paste", self)
-                paste_action.triggered.connect(self.paste_files)
-                menu.addAction(paste_action)
+            paste_action = QAction("Paste", self)
+            paste_action.triggered.connect(self.paste_files)
+            menu.addAction(paste_action)
 
-                delete_action = QAction("Delete", self)
-                delete_action.triggered.connect(self.delete_files)
-                menu.addAction(delete_action)
+            delete_action = QAction("Delete", self)
+            delete_action.triggered.connect(self.delete_files)
+            menu.addAction(delete_action)
 
-            new_folder_action = QAction("Create New Folder")
-            new_folder_action.triggered.connect(self.create_new_folder)
-            menu.addAction(new_folder_action)
+        new_folder_action = QAction("Create New Folder")
+        new_folder_action.triggered.connect(self.create_new_folder)
+        menu.addAction(new_folder_action)
 
-            refresh_directory_action = QAction("Refresh Directory")
-            refresh_directory_action.triggered.connect(self.load_files)
-            menu.addAction(refresh_directory_action)
+        refresh_directory_action = QAction("Refresh Directory")
+        refresh_directory_action.triggered.connect(self.load_files)
+        menu.addAction(refresh_directory_action)
 
-            sort_az_action = QAction("Sort A - Z", self)
-            sort_az_action.triggered.connect(self.sort_files)
-            menu.addAction(sort_az_action)
+        sort_az_action = QAction("Sort A - Z", self)
+        sort_az_action.triggered.connect(self.sort_files)
+        menu.addAction(sort_az_action)
 
-            shuffle_action = QAction("Shuffle Audio Files", self)
-            shuffle_action.triggered.connect(self.shuffle_audio_files)
-            menu.addAction(shuffle_action)
-            
-            menu.exec_(self.file_browser.viewport().mapToGlobal(pos))
+        shuffle_action = QAction("Shuffle Audio Files", self)
+        shuffle_action.triggered.connect(self.shuffle_audio_files)
+        menu.addAction(shuffle_action)
+        
+        menu.exec_(self.file_browser.viewport().mapToGlobal(pos))
     
     def load_files(self):
         '''Loads files and folders into the file browser (QTreeWidget).'''
