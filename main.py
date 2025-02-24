@@ -432,11 +432,23 @@ class AudioPlayer(QWidget):
             # Play and select the next audio file in the folder.
             prev_audio_item = self.file_browser.topLevelItem(active_index - 1)
             if prev_audio_item:
-                self.file_browser.clearSelection()
-                prev_audio_item.setSelected(True)
-                audio_path = self.get_file_browser_item_path(prev_audio_item)
-                self.play_audio(audio_path)
-                return
+
+                # If the previous item was a folder, play the last audio file in the directory.
+                if prev_audio_item.text(1) == "Folder":
+                    last_audio_item = self.file_browser.topLevelItem(self.file_browser.topLevelItemCount() - 1)
+                    self.file_browser.clearSelection()
+                    last_audio_item.setSelected(True)
+                    audio_path = self.get_file_browser_item_path(last_audio_item)
+                    self.play_audio(audio_path)
+                    return
+
+                # Otherwise play the previous audio file.
+                else:
+                    self.file_browser.clearSelection()
+                    prev_audio_item.setSelected(True)
+                    audio_path = self.get_file_browser_item_path(prev_audio_item)
+                    self.play_audio(audio_path)
+                    return
             
             # If the last audio file in the folder was being played, play the first audio file in the folder.
             else:
