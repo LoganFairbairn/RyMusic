@@ -94,15 +94,18 @@ QMenu::item:hover {
 
 /* Scrollbars Styling */
 
+
 QScrollBar {
     background-color: rgb(64, 64, 64);
-    border: 1px solid rgb(20, 20, 20);
-    height: 10px;
+    border-left: 1px solid rgb(20, 20, 20);
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
 }
 
 QScrollBar::handle {
-    background-color: rgb(64, 64, 64);
-    border-radius: 6px;
+    background-color: rgb(80, 80, 80);
+    border-radius: 2px;
 }
 
 QScrollBar::add-line:horizontal,
@@ -118,6 +121,7 @@ QScrollBar::left-arrow:horizontal,
 QScrollBar::right-arrow:horizontal {
     background: none;
 }
+
 
 /* Tooltip Styling */
 
