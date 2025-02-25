@@ -417,6 +417,9 @@ class AudioPlayer(QWidget):
         else:
             self.play_first_audio()
 
+        # Clear focus to avoid showing focus highlighting.
+        self.file_browser.clearFocus()
+
     def play_previous_audio_file(self):
         '''Plays the previous audio file in the folder.'''
 
@@ -455,6 +458,9 @@ class AudioPlayer(QWidget):
         else:
             self.play_first_audio()
 
+        # Clear focus to avoid showing focus highlighting.
+        self.file_browser.clearFocus()
+
     def rename_file(self):
         '''Renames the selected file or folder.'''
         current_path = self.folder_path_field.text()
@@ -466,22 +472,21 @@ class AudioPlayer(QWidget):
         # Prompt the user to enter a new name for the file or folder path.
         item = selected_items[0]
         old_name = item.text(0)
-        old_path = os.path.join(current_path, old_name)
-        
+        file_extension = item.text(1)
+
         new_name, ok = QInputDialog.getText(self, "Rename", "Enter new name:", text=old_name)
         if not ok or not new_name.strip():
             return
         
         new_path = os.path.join(current_path, new_name)
-        if os.path.exists(new_path):
+        if os.path.exists(new_path + file_extension):
             QMessageBox.warning(self, "Rename", "A file or folder with this name already exists.")
             return
         
         # Attempt to rename the file.
         try:
-            file_extension = item.text(1)
-            old_path = os.path.splitext(old_path)[0] + file_extension
-            new_path = os.path.splitext(new_path)[0] + file_extension
+            old_path = os.path.join(current_path, old_name) + file_extension
+            new_path = new_path + file_extension
             os.rename(old_path, new_path)
             self.load_files()
         except Exception as e:
