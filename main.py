@@ -79,10 +79,6 @@ class AudioPlayer(QWidget):
         
         # Create an options menu.
         self.settings_menu = QMenu(self)
-        self.shuffle_action = QAction("Shuffle", self)
-        self.shuffle_action.setCheckable(True)
-        self.shuffle_action.setChecked(True)
-        self.settings_menu.addAction(self.shuffle_action)
 
         self.loop_audio_action = QAction("Loop Audio", self)
         self.loop_audio_action.setCheckable(True)
@@ -284,10 +280,6 @@ class AudioPlayer(QWidget):
             self.file_browser.addTopLevelItem(QTreeWidgetItem([name, file_type]))
 
         self.folder_path_field.setText(current_path)
-
-        # Shuffle audio files if shuffle is enabled.
-        if self.shuffle_action.isChecked():
-            self.shuffle_audio_files()
 
     def file_item_double_clicked(self, item, column):
         '''Triggers when an item in the file browser is double clicked.'''
