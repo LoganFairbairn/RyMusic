@@ -72,15 +72,14 @@ QMenu {
     background-color: rgb(64, 64, 64);
     color: rgb(211, 211, 211);
     border: 1px solid rgb(20, 20, 20);
+    border-radius: 2px;
 }
 
 QMenu::item {
     padding: 8px 20px;
-    border-radius: 2px;
 }
 
 QMenu::item:selected {
-    
     color: white;
     background-color: rgb(76, 124, 194);
 }
