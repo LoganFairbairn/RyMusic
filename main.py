@@ -638,6 +638,14 @@ class AudioPlayer(QWidget):
         for item in audio_items:
             self.file_browser.addTopLevelItem(item)
 
+        # If audio was being played before shuffling files, re-select it.
+        for i in range(self.file_browser.topLevelItemCount()):
+            item = self.file_browser.topLevelItem(i)
+            audio_name = item.text(0)
+            if audio_name == self.active_audio_name_label.text():
+                self.file_browser.clearSelection()
+                item.setSelected(True)
+
     def timer_trigger(self):
         '''Triggers updates for user interface every few miliseconds.'''
 
