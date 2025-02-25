@@ -79,20 +79,15 @@ class AudioPlayer(QWidget):
         
         # Create an options menu.
         self.settings_menu = QMenu(self)
-        shuffle_action = QAction("Shuffle", self)
-        shuffle_action.setCheckable(True)
-        shuffle_action.setChecked(True)
-        self.settings_menu.addAction(shuffle_action)
+        self.shuffle_action = QAction("Shuffle", self)
+        self.shuffle_action.setCheckable(True)
+        self.shuffle_action.setChecked(True)
+        self.settings_menu.addAction(self.shuffle_action)
 
-        loop_audio_action = QAction("Loop Audio", self)
-        loop_audio_action.setCheckable(True)
-        loop_audio_action.setChecked(True)
-        self.settings_menu.addAction(loop_audio_action)
-
-        loop_playlist_action = QAction("Loop Playlist", self)
-        loop_playlist_action.setCheckable(True)
-        loop_playlist_action.setChecked(True)
-        self.settings_menu.addAction(loop_playlist_action)
+        self.loop_audio_action = QAction("Loop Audio", self)
+        self.loop_audio_action.setCheckable(True)
+        self.loop_audio_action.setChecked(False)
+        self.settings_menu.addAction(self.loop_audio_action)
 
         # Create a hamburger menu button
         icon_path = self.get_resource_path('icons/hamburger_menu_icon.svg')
@@ -289,6 +284,10 @@ class AudioPlayer(QWidget):
             self.file_browser.addTopLevelItem(QTreeWidgetItem([name, file_type]))
 
         self.folder_path_field.setText(current_path)
+
+        # Shuffle audio files if shuffle is enabled.
+        if self.shuffle_action.isChecked():
+            self.shuffle_audio_files()
 
     def file_item_double_clicked(self, item, column):
         '''Triggers when an item in the file browser is double clicked.'''
@@ -659,7 +658,18 @@ class AudioPlayer(QWidget):
         else:
             if self.audio_length_label.text() != "0:00":
                 if self.current_playtime_label.text() == self.audio_length_label.text():
-                    self.play_next_audio_file()
+
+                    # If looping is enabled, restart the same song.
+                    if self.loop_audio_action.isChecked():
+                        pygame.mixer.music.play(start=0)
+                        self.current_playtime_label.setText("0:00")
+                        self.paused = False
+                        self.last_seek_position = 0
+                        self.seek_slider.setDisabled(False)
+                    
+                    # Otherwise play the next audio file.
+                    else:
+                        self.play_next_audio_file()
 
     def update_seek_slider_position(self):
         '''Updates the current seek sliders position.'''
