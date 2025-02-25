@@ -281,6 +281,9 @@ class AudioPlayer(QWidget):
 
         self.folder_path_field.setText(current_path)
 
+        # Clear focus to avoid showing focus highlighting.
+        self.file_browser.clearFocus()
+
     def file_item_double_clicked(self, item, column):
         '''Triggers when an item in the file browser is double clicked.'''
 
@@ -645,6 +648,9 @@ class AudioPlayer(QWidget):
             if audio_name == self.active_audio_name_label.text():
                 self.file_browser.clearSelection()
                 item.setSelected(True)
+        
+        # Clear focus to avoid showing focus highlighting.
+        self.file_browser.clearFocus()
 
     def timer_trigger(self):
         '''Triggers updates for user interface every few miliseconds.'''
