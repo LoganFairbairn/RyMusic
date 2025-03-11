@@ -35,7 +35,7 @@ class AudioPlayer(QWidget):
         self.timer.start(100)
 
         # Define audio player variables.
-        self.paused = False
+        self.paused = True
         self.last_seek_position = 0
         self.clipboard = []
         self.cut_mode = False
@@ -667,20 +667,18 @@ class AudioPlayer(QWidget):
 
         # If the song has ended, play the next song.
         else:
-            if self.audio_length_label.text() != "0:00":
-                if self.current_playtime_label.text() == self.audio_length_label.text():
-
-                    # If looping is enabled, restart the same song.
-                    if self.loop_audio_action.isChecked():
-                        pygame.mixer.music.play(start=0)
-                        self.current_playtime_label.setText("0:00")
-                        self.paused = False
-                        self.last_seek_position = 0
-                        self.seek_slider.setDisabled(False)
-                    
-                    # Otherwise play the next audio file.
-                    else:
-                        self.play_next_audio_file()
+            if self.paused == False and pygame.mixer.get_busy() == False:
+                # If looping is enabled, restart the same song.
+                if self.loop_audio_action.isChecked():
+                    pygame.mixer.music.play(start=0)
+                    self.current_playtime_label.setText("0:00")
+                    self.paused = False
+                    self.last_seek_position = 0
+                    self.seek_slider.setDisabled(False)
+                
+                # Otherwise play the next audio file.
+                else:
+                    self.play_next_audio_file()
 
     def update_seek_slider_position(self):
         '''Updates the current seek sliders position.'''
