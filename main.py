@@ -4,12 +4,15 @@ import datetime
 import shutil
 import random
 import pygame
+import json
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QPushButton, QLabel, QInputDialog, QMessageBox, QHBoxLayout, QSlider, QAbstractItemView, QMenu, QAction, QLineEdit, QHeaderView
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer, QPoint
 
 # Initialize pygame mixer for audio playback.
 pygame.mixer.init()
+
+CONFIG_FILENAME = "config.json"
 
 SUPPORTED_AUDIO_EXTENSIONS = {
     '.wav',  # .wav files
@@ -71,8 +74,9 @@ class AudioPlayer(QWidget):
         self.menu_layout.addWidget(self.parent_folder_button)
 
         # Create a layout with the input field for the folder path and folder navigation options.
+        saved_folder_path = self.load_folder_path()
         self.folder_path_field = QLineEdit(self)
-        self.folder_path_field.setText("/media/logan/xfiles/music")
+        self.folder_path_field.setText(saved_folder_path)
         self.folder_path_field.setFixedHeight(30)
         self.folder_path_field.textChanged.connect(self.load_files)
         self.menu_layout.addWidget(self.folder_path_field)
@@ -110,8 +114,8 @@ class AudioPlayer(QWidget):
 
         # Set column resize modes.
         header = self.file_browser.header()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)  # Manually resize this column
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Auto-resize Type column
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         header.setStretchLastSection(False)
         self.layout.addWidget(self.file_browser)
 
@@ -771,6 +775,26 @@ class AudioPlayer(QWidget):
         seconds = int(seconds % 60)
         return f"{minutes}:{seconds:02d}"
 
+    def get_python_execution_path(self):
+        '''Returns the path the Python app was ran from.'''
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(script_dir, CONFIG_FILENAME)
+
+    def save_folder_path(self, path):
+        '''Saves the given folder path to a JSON file.'''
+        config_path = self.get_python_execution_path()
+        data = {"folder_path": path}
+        with open(config_path, "w") as f:
+            json.dump(data, f)
+
+    def load_folder_path(self):
+        '''Loads the folder path from the JSON file.'''
+        config_path = self.get_python_execution_path()
+        if not os.path.exists(config_path):
+            return ""
+        with open(config_path, "r") as f:
+            data = json.load(f)
+            return data.get("folder_path", "")
 
 #------------------------------ Application Start ------------------------------#
 
