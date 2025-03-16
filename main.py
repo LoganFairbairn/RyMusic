@@ -7,7 +7,7 @@ import pygame
 import json
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QPushButton, QLabel, QInputDialog, QMessageBox, QHBoxLayout, QSlider, QAbstractItemView, QMenu, QAction, QLineEdit, QHeaderView
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, QTimer, QPoint
+from PyQt5.QtCore import Qt, QTimer, QPoint, QSettings
 
 # Initialize pygame mixer for audio playback.
 pygame.mixer.init()
@@ -88,6 +88,14 @@ class AudioPlayer(QWidget):
         self.loop_audio_action.setCheckable(True)
         self.loop_audio_action.setChecked(False)
         self.settings_menu.addAction(self.loop_audio_action)
+
+        # Add a button to save / bookmark paths.
+        icon_path = self.get_resource_path('icons/Star.svg')
+        self.bookmark_button = QPushButton(self)
+        self.bookmark_button.setIcon(QIcon(icon_path))
+        self.bookmark_button.clicked.connect(self.save_folder_path)
+        self.bookmark_button.setToolTip("Save the folder path.")
+        self.menu_layout.addWidget(self.bookmark_button)
 
         # Create a hamburger menu button
         icon_path = self.get_resource_path('icons/hamburger_menu_icon.svg')
@@ -771,26 +779,17 @@ class AudioPlayer(QWidget):
         seconds = int(seconds % 60)
         return f"{minutes}:{seconds:02d}"
 
-    def get_python_execution_path(self):
-        '''Returns the path the Python app was ran from.'''
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        return os.path.join(script_dir, CONFIG_FILENAME)
-
-    def save_folder_path(self, path):
-        '''Saves the given folder path to a JSON file.'''
-        config_path = self.get_python_execution_path()
-        data = {"folder_path": path}
-        with open(config_path, "w") as f:
-            json.dump(data, f)
+    def save_folder_path(self):
+        '''Saves the folder path to settings.'''
+        path = self.folder_path_field.text()
+        settings = QSettings("Ryver", "RyMusic")
+        settings.setValue("folder_path", path)
 
     def load_folder_path(self):
-        '''Loads the folder path from the JSON file.'''
-        config_path = self.get_python_execution_path()
-        if not os.path.exists(config_path):
-            return ""
-        with open(config_path, "r") as f:
-            data = json.load(f)
-            return data.get("folder_path", "")
+        '''Loads the folder path from settings.'''
+        settings = QSettings("Ryver", "RyMusic")
+        return settings.value("folder_path", "", type=str)
+
 
 #------------------------------ Application Start ------------------------------#
 
