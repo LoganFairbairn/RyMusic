@@ -111,6 +111,7 @@ class AudioPlayer(QWidget):
         self.file_browser.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.file_browser.customContextMenuRequested.connect(self.show_right_click_menu)
         self.file_browser.itemDoubleClicked.connect(self.file_item_double_clicked)
+        self.file_browser.setFocusPolicy(Qt.NoFocus)
 
         # Set column resize modes.
         header = self.file_browser.header()
@@ -287,9 +288,6 @@ class AudioPlayer(QWidget):
 
         self.folder_path_field.setText(current_path)
 
-        # Clear focus to avoid showing focus highlighting.
-        self.file_browser.clearFocus()
-
     def file_item_double_clicked(self, item, column):
         '''Triggers when an item in the file browser is double clicked.'''
 
@@ -423,9 +421,6 @@ class AudioPlayer(QWidget):
         else:
             self.play_first_audio()
 
-        # Clear focus to avoid showing focus highlighting.
-        self.file_browser.clearFocus()
-
     def play_previous_audio_file(self):
         '''Plays the previous audio file in the folder.'''
 
@@ -463,9 +458,6 @@ class AudioPlayer(QWidget):
         # attempt to play something from the current directory.
         else:
             self.play_first_audio()
-
-        # Clear focus to avoid showing focus highlighting.
-        self.file_browser.clearFocus()
 
     def rename_file(self):
         '''Renames the selected file or folder.'''
@@ -664,9 +656,6 @@ class AudioPlayer(QWidget):
             if audio_name == self.active_audio_name_label.text():
                 self.file_browser.clearSelection()
                 item.setSelected(True)
-        
-        # Clear focus to avoid showing focus highlighting.
-        self.file_browser.clearFocus()
 
     def timer_trigger(self):
         '''Triggers updates for user interface every few miliseconds.'''
