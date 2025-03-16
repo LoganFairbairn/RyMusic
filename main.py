@@ -473,24 +473,29 @@ class AudioPlayer(QWidget):
             QMessageBox.warning(self, "Rename", "No file or folder selected.")
             return
 
-        # Prompt the user to enter a new name for the file or folder path.
+        # Prompt the user to enter a new name for the file or folder.
         item = selected_items[0]
         old_name = item.text(0)
         file_extension = item.text(1)
-
-        new_name, ok = QInputDialog.getText(self, "Rename", "Enter new name:", text=old_name)
+        new_name, ok = QInputDialog.getText(self, "Rename", "Enter a new name:", text=old_name)
         if not ok or not new_name.strip():
             return
-        
+        old_path = os.path.join(current_path, old_name)
         new_path = os.path.join(current_path, new_name)
-        if os.path.exists(new_path + file_extension):
+
+        # If the renamed item is not a folder, append the file extension to the path.
+        if not file_extension.upper() == 'FOLDER':
+            old_path += file_extension
+            new_path += file_extension
+        
+        # If there is a file or folder that already exists in this directory,
+        # with the same name throw an error.
+        if os.path.exists(new_path):
             QMessageBox.warning(self, "Rename", "A file or folder with this name already exists.")
             return
         
-        # Attempt to rename the file.
+        # Attempt to rename the file or folder.
         try:
-            old_path = os.path.join(current_path, old_name) + file_extension
-            new_path = new_path + file_extension
             os.rename(old_path, new_path)
             self.load_files()
         except Exception as e:
