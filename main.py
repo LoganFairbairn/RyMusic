@@ -216,11 +216,13 @@ class AudioPlayer(QWidget):
             copy_action = QAction("Copy", self)
             copy_action.triggered.connect(self.copy_files)
             menu.addAction(copy_action)
-
+        
+        if self.cut_mode:
             paste_action = QAction("Paste", self)
             paste_action.triggered.connect(self.paste_files)
             menu.addAction(paste_action)
 
+        if selected_items:
             delete_action = QAction("Delete", self)
             delete_action.triggered.connect(self.delete_files)
             menu.addAction(delete_action)
